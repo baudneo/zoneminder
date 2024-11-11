@@ -171,6 +171,67 @@ void Monitor::ONVIF::WaitForMessage() {
     } else {
       Debug(1, "ONVIF polling : Got Good Response! %i", result);
       for (auto msg : tev__PullMessagesResponse.wsnt__NotificationMessage) {
+        if (msg->Topic != nullptr) {
+          if (msg->Topic->__any.text != nullptr) {
+            Debug(1, "Topic text: %s", msg->Topic->__any.text);
+          } else {
+            Debug(1, "Topic text is nullptr");
+          }
+        } else {
+          Debug(1, "Topic is nullptr");
+        }
+
+        if (msg->Message.__any.elts != nullptr) {
+          auto elts = msg->Message.__any.elts;
+          while (elts != nullptr) {
+            if (elts->atts != nullptr) {
+              auto atts = elts->atts;
+              while (atts != nullptr) {
+                if (atts->text != nullptr) {
+                  Debug(1, "Message attribute text: %s", atts->text);
+                } else {
+                  Debug(1, "Message attribute text is nullptr");
+                }
+                atts = atts->next;
+              }
+            } else {
+              Debug(1, "Message attributes are nullptr");
+            }
+            elts = elts->next;
+          }
+        } else {
+          Debug(1, "Message elements are nullptr");
+        }
+
+
+
+
+
+          if (msg->Message.__any.elts->next != nullptr) {
+            if (msg->Message.__any.elts->next->elts != nullptr) {
+              if (msg->Message.__any.elts->next->elts->atts != nullptr) {
+                if (msg->Message.__any.elts->next->elts->atts->next != nullptr) {
+                  if (msg->Message.__any.elts->next->elts->atts->next->text != nullptr) {
+                    Debug(1, "Message text: %s", msg->Message.__any.elts->next->elts->atts->next->text);
+                  } else {
+                    Debug(1, "Message text is nullptr");
+                  }
+                } else {
+                  Debug(1, "Message atts->next is nullptr");
+                }
+              } else {
+                Debug(1, "Message atts is nullptr");
+              }
+            } else {
+              Debug(1, "Message elts->next is nullptr");
+            }
+          } else {
+            Debug(1, "Message elts is nullptr");
+          }
+        } else {
+          Debug(1, "Message is nullptr");
+        }
+
         if ((msg->Topic != nullptr) &&
             (msg->Topic->__any.text != nullptr) &&
             (parent->onvif_alarm_txt.empty() || std::strstr(msg->Topic->__any.text, parent->onvif_alarm_txt.c_str())) &&
@@ -217,6 +278,35 @@ void Monitor::ONVIF::WaitForMessage() {
           Debug(1, "ONVIF Got a message that we couldn't parse");
           if ((msg->Topic != nullptr) && (msg->Topic->__any.text != nullptr)) {
             Debug(1, "text was %s", msg->Topic->__any.text);
+
+            // // Trigger start/stop event based on the message text
+            // // Reolink: VehicleDetect, Visitor=button press, Package=parcel,
+            // if (std::strstr(msg->Topic->__any.text, "VehicleDetect") != nullptr) {
+            //   Info("Triggered Start on ONVIF for VehicleDetect");
+            //   if (alarms.count(msg->Topic->__any.text) == 0) {
+            //     alarms[msg->Topic->__any.text] = "VehicleDetect";
+            //     if (!alarmed) {
+            //       Info("Triggered Start Event on ONVIF for VehicleDetect");
+            //       alarmed = true;
+            //       std::this_thread::sleep_for(std::chrono::seconds(1)); //thread sleep
+            //     }
+            //   }
+            // } else if (std::strstr(msg->Topic->__any.text, "StopEvent") != nullptr) {
+            //   Info("Triggered Stop on ONVIF for StopEvent");
+            //   {
+            //     std::unique_lock<std::mutex> lck(alarms_mutex);
+            //     alarms.erase(msg->Topic->__any.text);
+            //   }
+            //   Debug(1, "ONVIF Alarms Empty: Alarms count is %zu, alarmed is %s, empty is %d ", alarms.size(), alarmed ? "true": "false", alarms.empty());
+            //   if (alarms.empty()) {
+            //     alarmed = false;
+            //   }
+            //   if (!parent->Event_Poller_Closes_Event) {
+            //     parent->Event_Poller_Closes_Event = true;
+            //     Info("Setting ClosesEvent");
+            //   }
+            // } // end new topic text parsing
+          // old
           }
         }
       }  // end foreach msg
